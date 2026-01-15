@@ -5,22 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daily Teachers' Report</title>
     <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; background: #f0f2f5; }
-        .card { background: white; padding: 25px; border-radius: 12px; shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        input, textarea, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        body { font-family: sans-serif; max-width: 850px; margin: 20px auto; padding: 20px; background: #f0f2f5; color: #333; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        input, textarea, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
         table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-        th, td { border: 1px solid #ddd; padding: 8px; }
-        .btn-submit { background: #27ae60; color: white; border: none; padding: 15px; width: 100%; font-size: 1.1em; cursor: pointer; border-radius: 6px; margin-top: 10px; }
-        .btn-submit:hover { background: #219150; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #f8f9fa; }
+        .consecutive-box { background: #fff9e6; border-left: 5px solid #f39c12; padding: 15px; margin: 20px 0; border-radius: 4px; }
+        .btn-submit { background: #27ae60; color: white; border: none; padding: 15px; width: 100%; font-size: 1.1em; cursor: pointer; border-radius: 6px; margin-top: 20px; font-weight: bold; }
+        .btn-submit:disabled { background: #95a5a6; }
+        h3 { border-bottom: 2px solid #eee; padding-bottom: 5px; color: #2c3e50; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <h2>Daily Teachers' Report</h2>
-    <input type="date" id="reportDate">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+        <input type="date" id="reportDate">
+        <input type="text" id="grade" placeholder="Class/Grade">
+    </div>
     <input type="text" id="teacher" placeholder="Teacher's Name">
-    <input type="text" id="grade" placeholder="Class/Grade">
 
     <h3>Attendance Summary</h3>
     <table>
@@ -28,20 +33,34 @@
         <tr>
             <td><input type="number" id="total" oninput="calc()"></td>
             <td><input type="number" id="present" oninput="calc()"></td>
-            <td><input type="number" id="absent" readonly></td>
+            <td><input type="number" id="absent" readonly style="background:#eee;"></td>
         </tr>
     </table>
 
-    <textarea id="discipline" placeholder="Disciplinary Issues"></textarea>
-    <textarea id="health" placeholder="Health, Safety & Welfare Complaints"></textarea>
-    <textarea id="comments" placeholder="General Comments"></textarea>
+    <div class="consecutive-box">
+        <h3>🚩 2+ Consecutive Days Absent</h3>
+        <p style="font-size: 0.85em; margin-top: -10px; color: #666;">List students missing 2 or more days and their status.</p>
+        <textarea id="consecutiveAbsences" rows="3" placeholder="Student Names & Reasons (e.g. John Doe - Flu, Jane Smith - Travel)"></textarea>
+        
+        <label style="font-weight: bold; display: block; margin-top: 10px;">Have parents been contacted?</label>
+        <select id="parentsContacted">
+            <option value="No">No</option>
+            <option value="Yes">Yes</option>
+            <option value="Partial">Some parents contacted</option>
+            <option value="N/A">N/A (No consecutive absences)</option>
+        </select>
+    </div>
 
-    <button class="btn-submit" onclick="submitData()" id="submitBtn">Submit to Google Sheet</button>
+    <h3>General Reports</h3>
+    <textarea id="discipline" placeholder="Disciplinary Issues"></textarea>
+    <textarea id="health" placeholder="Health & Welfare Complaints"></textarea>
+    <textarea id="comments" placeholder="General Teacher Comments"></textarea>
+
+    <button class="btn-submit" onclick="submitData()" id="submitBtn">Submit Report to Cloud</button>
 </div>
 
 <script>
-    // Replace this with your copied Web App URL
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw8_Ob8O5N6eRJcngiZwPaGbEu0LAdcyR1SwGAanIRryPq51Qr-tBwcyYc1g318_LFP/exec';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx4qTh1AuCSPFJPW3Qu1dQnbZZiL3l5r5ZxeUfb79tHTN802WUJzDKHIQkJW_c51CpY/exec';
 
     document.getElementById('reportDate').valueAsDate = new Date();
 
@@ -54,7 +73,7 @@
     async function submitData() {
         const btn = document.getElementById('submitBtn');
         btn.disabled = true;
-        btn.innerText = "Sending...";
+        btn.innerText = "Processing...";
 
         const payload = {
             date: document.getElementById('reportDate').value,
@@ -63,6 +82,8 @@
             total: document.getElementById('total').value,
             present: document.getElementById('present').value,
             absent: document.getElementById('absent').value,
+            consecutiveAbsences: document.getElementById('consecutiveAbsences').value,
+            parentsContacted: document.getElementById('parentsContacted').value,
             discipline: document.getElementById('discipline').value,
             health: document.getElementById('health').value,
             comments: document.getElementById('comments').value
@@ -71,11 +92,11 @@
         try {
             await fetch(WEB_APP_URL, {
                 method: 'POST',
-                mode: 'no-cors', // Essential for Google Apps Script
+                mode: 'no-cors',
                 body: JSON.stringify(payload)
             });
-            alert("Report successfully sent to Google Sheets!");
-            btn.innerText = "Submit to Google Sheet";
+            alert("Report saved! Data sent to Google Sheets.");
+            btn.innerText = "Submit Report to Cloud";
             btn.disabled = false;
         } catch (e) {
             alert("Error: " + e.toString());
