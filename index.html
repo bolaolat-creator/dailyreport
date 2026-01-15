@@ -118,21 +118,34 @@
 
 <script>
     // Set default date to today
-    document.getElementById('reportDate').valueAsDate = new Date();
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyXV6AfXey8X8ADZPpBvCy8Dq3UOmqcQ2-1zWMD_5VDIZ-7QVnLcfBhUsuRh7UwXvgZNg/exec';
 
-    function calcAbsents() {
-        const total = document.getElementById('total').value;
-        const present = document.getElementById('present').value;
-        if (total && present) {
-            document.getElementById('absent').value = total - present;
-        }
-    }
+async function submitToGoogle() {
+    const btn = document.querySelector('.btn-print');
+    btn.innerText = "Sending...";
+    
+    const reportData = {
+        grade: document.getElementById('grade').value,
+        teacher: document.getElementById('teacher').value,
+        date: document.getElementById('reportDate').value,
+        total: document.getElementById('total').value,
+        present: document.getElementById('present').value,
+        discipline: document.querySelector('textarea[placeholder="Enter any issues..."]').value,
+        comments: document.querySelector('textarea:last-of-type').value
+    };
 
-    function preparePrint() {
-        const now = new Date();
-        document.getElementById('submitTime').innerText = now.toLocaleTimeString();
-        window.print();
+    try {
+        await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(reportData)
+        });
+        alert("Report Saved to Google Doc!");
+        btn.innerText = "Print / Save as PDF";
+    } catch (error) {
+        console.error(error);
+        alert("Error saving report.");
     }
+}
 </script>
 
 </body>
